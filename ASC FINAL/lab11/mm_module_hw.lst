@@ -1,0 +1,19 @@
+     1                                  bits 32
+     2                                  
+     3                                  global mm_module_hw
+     4                                  
+     5                                  ;mm_module_hw : 
+     6                                  ;               -parameters : the contor(int) and a string
+     7                                  ;               -adds to the array the corresponding character
+     8                                  ;
+     9                                  
+    10                                  mm_module_hw:
+    11                                  
+    12 00000000 8B542404                    mov edx, [esp + 4] ;contor
+    13 00000004 8B442408                    mov eax, [esp + 8]  ;the given array
+    14 00000008 01D0                        add eax, edx ; in eax we have the address of the character that needs to be put in array
+    15                                      
+    16 0000000A C20800                      ret 8
+    17                                      
+    18                                      
+    19                                      

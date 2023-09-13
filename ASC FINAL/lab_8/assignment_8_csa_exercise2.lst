@@ -1,0 +1,120 @@
+     1                                  ;Statement 23-th exercise2: 
+     2                                  ;A file name and a hexadecimal number are given. 
+     3                                  ;Create a file with the given name and write each nibble composing the hexadecimal number on a different line to file.
+     4                                  
+     5                                  ; declaring extern functions used in the program
+     6                                  extern exit, fopen, fprintf, fclose
+     7                                  import exit msvcrt.dll
+     8                                  import fopen msvcrt.dll
+     9                                  import fprintf msvcrt.dll
+    10                                  import fclose msvcrt.dll
+    11                                  
+    12                                  bits 32 ;assembling for the 32 bits architecture
+    13                                  ; the start label will be the entry point in the program
+    14                                  global  start 
+    15                                  
+    16                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+    17                                  
+    19                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+    20                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+    21                                          
+    22                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    23                                  
+    24 00000000 686578612E74787400          file_name db "hexa.txt", 0 ;filename
+    25 00000009 7700                        access_mode db "w", 0
+    26 0000000B 25780A00                    format  db "%x", 10, 0 ; definining the format
+    27                                      
+    28 0000000F FFFFFFFF                    file_des1 dd -1
+    29 00000013 BD0A0000                    n dd 0abdh          ;hexadecimal number to be read from the file
+    30 00000017 546865206865786164-         message db "The hexadecimal number is : ", 0
+    30 00000020 6563696D616C206E75-
+    30 00000029 6D626572206973203A-
+    30 00000032 2000               
+    31 00000034 546865206E6962626C-         message1 db "The nibbles of the hex-number are :", 10
+    31 0000003D 6573206F6620746865-
+    31 00000046 206865782D6E756D62-
+    31 0000004F 657220617265203A0A 
+    32 00000058 10                          hex db 16
+    33                                      
+    34 00000059 <res 00000004>              n1 resd 1
+    35 0000005D <res 00000001>              n2 resb 1
+    36                                      
+    37                                  
+    38                                  
+    39                                  segment  code use32 class=code ; code segment
+    40                                      start:
+    41                                          ;first we read the hexadecimal number in the fila
+    42                                          
+    43                                          ;calling fopen to create the file and emptying the stack
+    44 00000000 68[09000000]                    push dword access_mode     
+    45 00000005 68[00000000]                    push dword file_name
+    46 0000000A FF15[00000000]                  call [fopen]
+    47 00000010 83C408                          add esp, 4*2 
+    48                                  
+    49 00000013 A3[0F000000]                    mov [file_des1], eax  ; store the file descriptor returned by fopen   
+    50                                          
+    51 00000018 83F800                          cmp eax, 0
+    52 0000001B 7476                            je no_digits
+    53                                          
+    54 0000001D 68[17000000]                    push dword message
+    55 00000022 FF35[0F000000]                  push dword [file_des1]
+    56 00000028 FF15[00000000]                  call [fprintf]
+    57 0000002E 83C408                          add esp, 4 * 2
+    58                                          
+    59                                          ;fprintf(file_des1, text)
+    60 00000031 FF35[13000000]                  push dword [n]
+    61 00000037 68[0B000000]                    push dword format
+    62 0000003C FF35[0F000000]                  push dword [file_des1]
+    63 00000042 FF15[00000000]                  call [fprintf]
+    64 00000048 83C40C                          add esp, 4 * 3
+    65                                          
+    66                                          
+    67 0000004B 66A1[13000000]                  mov ax, [n]
+    68                                          
+    69                                          ;in n we have the hexadecimal number
+    70                                          repeta:
+    71 00000051 B110                                mov cl, 16
+    72 00000053 F6F1                                div cl ;al -> quotient(A) ; ah -> remainder(B)
+    73                                              
+    74                                              ;we want to display ONLY the REMAINDERS
+    75                                              
+    76 00000055 8825[59000000]                      mov [n1], ah ;in n1 we have the remainder stored
+    77 0000005B A2[5D000000]                        mov [n2], al ;registers modify after prints
+    78                                              
+    79 00000060 FF35[59000000]                      push dword [n1]
+    80 00000066 68[0B000000]                        push dword format
+    81 0000006B FF35[0F000000]                      push dword [file_des1]
+    82 00000071 FF15[00000000]                      call [fprintf]
+    83 00000077 83C40C                              add esp, 4 * 3 ;we write in the .txt
+    84                                              
+    85                                              ;check if the hexadecimal number still has digits
+    86                                              
+    87 0000007A A0[5D000000]                        mov al, [n2]
+    88 0000007F B400                                mov ah, 0 ; ax <- quotient
+    89 00000081 66BA0000                            mov dx, 0
+    90 00000085 6652                                push dx
+    91 00000087 6650                                push ax
+    92 00000089 58                                  pop eax
+    93                                              
+    94                                              
+    95 0000008A 83F800                              cmp eax, 0
+    96 0000008D 7E04                                jle no_digits
+    97                                              
+    98                                              ;go to the next digit 
+    99 0000008F B400                                mov ah, 0
+   100                                              
+   101                                              
+   102 00000091 E2BE                            loop repeta
+   103                                            
+   104                                          
+   105                                          
+   106                                          no_digits:
+   107                                              ; fclose(file_descriptor)
+   108 00000093 FF35[0F000000]                      push dword [file_des1]
+   109 00000099 FF15[00000000]                      call [fclose]
+   110 0000009F 83C404                              add esp, 4
+   111                                     
+   112                                      
+   113                                      
+   114 000000A2 6A00                        push   dword 0 ;saves on stack the parameter of the function exit
+   115 000000A4 FF15[00000000]              call   [exit] ; function exit is called in order to end the execution of

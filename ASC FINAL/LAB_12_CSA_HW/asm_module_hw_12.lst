@@ -1,0 +1,37 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  
+     4                                  global _asm_module        
+     5                                  
+     6                                  
+     7                                  segment data use32 class=data
+     8                                      
+     9                                  segment code use32 class=code
+    10                                  
+    11                                  _asm_module:
+    12                                  
+    13 00000000 55                          push ebp ; needed when going back
+    14 00000001 89E5                        mov ebp, esp ; ebp = esp in this point
+    15                                      
+    16                                      ;the asm module gets a number from the C module and must "extract the hundreds digit
+    17 00000003 8B4508                      mov eax, [ebp + 8] ;the number that is transmitted from the C module
+    18 00000006 B903000000                  mov ecx, 3 ; because we need 3 divisions to get to the hundreds digit , otherwise it is a 0 ( 3 iterations )
+    19                                      loop1:
+    20 0000000B BA00000000                      mov edx, 0
+    21 00000010 BB0A000000                      mov ebx, 10
+    22 00000015 F7F3                            div ebx ;edx:eax / 10 => eax - quotient, edx - remainder
+    23 00000017 E2F2                        loop loop1
+    24                                      ;since we work only with eax and ecx properly, we do not need to push/pop
+    25                                      
+    26                                  
+    27                                  
+    28                                      
+    29 00000019 89EC                        mov esp, ebp ;restore the stack frame
+    30 0000001B 5D                          pop ebp
+    31                                  
+    32 0000001C 89D0                            mov eax, edx
+    33                                      
+    34 0000001E C3                          ret ; to return
+    35                                          
+    36                                      
+    37                                      

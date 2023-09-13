@@ -1,0 +1,4 @@
+The hexadecimal number is : abd
+d
+b
+a

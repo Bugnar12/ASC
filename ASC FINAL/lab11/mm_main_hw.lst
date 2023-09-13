@@ -1,0 +1,109 @@
+     1                                  ;Read a string s1 (which contains only lowercase letters). 
+     2                                  ;Using an alphabet (defined in the data segment), determine and display the string s2
+     3                                  ;obtained by substitution of each letter of the string s1 with the corresponding letter in the given alphabet.
+     4                                  ;Example:
+     5                                  ;The alphabet(given):  OPQRSTUVWXYZABCDEFGHIJKLMN
+     6                                  ;The alphabet(normal): abcdefghijklmnopqrstuvwxyz
+     7                                  ;The string s1: anaaremere
+     8                                  ;The string s2: OBOOFSASFS
+     9                                  
+    10                                  ;summary : parse the given array character by character, search into the normal alphabet
+    11                                  ;the POSITION on which the character is, afterwards look in the given array on what position
+    12                                  ;that character would be and extract it to the output array
+    13                                  
+    14                                  bits 32
+    15                                  global start
+    16                                  
+    17                                  extern printf, exit, scanf
+    18                                  import printf msvcrt.dll
+    19                                  import exit msvcrt.dll
+    20                                  import scanf msvcrt.dll
+    21                                  
+    22                                  extern mm_module_hw
+    23                                  
+    24                                  segment data use32 class=data
+    25                                  
+    26 00000000 00<rept>                    given_array times 40 db 0
+    27 00000028 616263646566676869-         normal_alphabet db 'abcdefghijklmnopqrstuvwxyz'
+    27 00000031 6A6B6C6D6E6F707172-
+    27 0000003A 737475767778797A   
+    28 00000042 434445464748494A4B-         given_alphabet db 'CDEFGHIJKLMNOPRQSTUVWXYZAB'
+    28 0000004B 4C4D4E4F5052515354-
+    28 00000054 55565758595A4142   
+    29 0000005C 00<rept>                    output_array times 100 db 0
+    30 000000C0 <res 00000001>              contor resb 1
+    31 000000C1 00000000                    rez dd 0
+    32 000000C5 25730A00                    format1 db "%s", 10, 0
+    33 000000C9 546865207472616E73-         format_string db "The transformed array is: %s", 0
+    33 000000D2 666F726D6564206172-
+    33 000000DB 7261792069733A2025-
+    33 000000E4 7300               
+    34                                      
+    35                                      
+    36                                  segment code use32 class=code
+    37                                       
+    38                                  start:
+    39                                      ;the given_array that is read
+    40 00000000 68[00000000]                push dword given_array
+    41 00000005 68[C9000000]                push dword format_string
+    42 0000000A FF15[00000000]              call [scanf]
+    43 00000010 83C408                      add esp, 4 * 2
+    44                                      
+    45 00000013 68[00000000]                push dword given_array
+    46 00000018 68[C9000000]                push dword format_string
+    47 0000001D FF15[00000000]              call [scanf]
+    48 00000023 83C408                      add esp, 4 * 2
+    49                                      
+    50                                      
+    51                                      ;compute the length of the array
+    52 00000026 B900000000                  mov ecx, 0
+    53 0000002B BB[00000000]                mov ebx, given_array
+    54                                      length1:
+    55 00000030 803B00                          cmp byte [ebx], 0
+    56 00000033 7404                            je finish
+    57 00000035 43                              inc ebx
+    58 00000036 41                              inc ecx
+    59 00000037 EBF7                            jmp length1
+    60                                      finish:
+    61                                      ;in ecx we have the length of the array
+    62                                      
+    63 00000039 BD00000000                  mov ebp, 0
+    64 0000003E BE[00000000]                mov esi, given_array
+    65 00000043 BF[5C000000]                mov edi, output_array
+    66 00000048 FC                          cld
+    67                                      loop1:
+    68 00000049 AC                              lodsb ;in al is the corresponding character , al <- character from the given array
+    69 0000004A BD[28000000]                    mov ebp, normal_alphabet
+    70 0000004F C605[C0000000]00                mov byte [contor], 0 ;this represents the position on which we will find the character
+    71                                          
+    72                                          loop2: ;here we parse the normal_alphabet
+    73 00000056 8A5D00                              mov bl, [ebp]
+    74 00000059 45                                  inc ebp
+    75 0000005A 38D8                                cmp al, bl ;we compare the characters
+    76 0000005C 7408                                je add_array ;if we find the character in the array we jump to the add_array label
+    77 0000005E FE05[C0000000]                      inc byte [contor]
+    78 00000064 EBF0                                jmp loop2
+    79                                          
+    80                                          add_array: ;here we look in the second given alphabet for the letter and transfer it into the final array
+    81 00000066 BA[42000000]                        mov edx, given_alphabet
+    82                                              
+    83 0000006B 52                                  push dword edx
+    84 0000006C FF35[C0000000]                      push dword [contor] ;push the parameters used in the module
+    85                                  
+    86 00000072 E8(00000000)                        call mm_module_hw ;call the module
+    87                                              
+    88 00000077 89C2                                mov edx, eax ;mov the result given from the module to edx
+    89                                              
+    90 00000079 8A02                                mov al, [edx]
+    91 0000007B AA                                  stosb ;store the letter into the output_array
+    92 0000007C E2CB                        loop loop1
+    93                                      
+    94                                      ;mov dword [contor], 0
+    95 0000007E 68[5C000000]                push output_array       
+    96 00000083 68[C9000000]                push format_string
+    97 00000088 FF15[00000000]              call [printf]
+    98 0000008E 83C408                      add esp, 2 * 4
+    99                                          
+   100                                  
+   101 00000091 6A00                        push 0
+   102 00000093 FF15[00000000]              call [exit]

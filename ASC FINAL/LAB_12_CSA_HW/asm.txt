@@ -1,0 +1,41 @@
+bits 32 ; assembling for the 32 bits architecture
+
+;Problem 23 from the asm + c set of problems
+;Read a string of integers s1 (represented on doublewords) in base 10. 
+;Determine and display the string s2 composed by the digits in the hundreds place of each integer in the string s1.
+;Example:    The string s1: 5892 456 33 7 245
+;The string s2: 8, 4, 0, 0, 2
+
+global _asm_module        
+
+
+segment data use32 class=data
+    
+segment code use32 class=code
+
+_asm_module:
+
+    push ebp ; needed when going back
+    mov ebp, esp ; ebp = esp in this point
+    
+    ;the asm module gets a number from the C module and must "extract the hundreds digit
+    mov eax, [ebp + 8] ;the number that is transmitted from the C module
+    mov ecx, 3 ; because we need 3 divisions to get to the hundreds digit , otherwise it is a 0 ( 3 iterations )
+    loop1:
+        mov edx, 0
+        mov ebx, 10
+        div ebx ;edx:eax / ebx => eax - quotient, edx - remainder
+    loop loop1
+    ;since we work only with eax and ecx properly, we do not need to push/pop
+    
+    mov eax, edx ; in edx we have the remainder of the divison by 10 * 3
+    ;in eax we return
+    
+    mov esp, ebp ;restore the stack frame
+    pop ebp
+
+    
+    ret ; to return
+        
+    
+    
